@@ -135,9 +135,12 @@ public class DynamicDisplay extends JWindow {
 //					System.out.println(f.getPath()+"=====>"+filepath+f.getName());
 //					demopngNames.add(f.getName());
 //					File f1 = new File(f.getAbsolutePath());
-					demopngs.add(new ImageIcon(f.getPath()));
+//					demopngs.add(new ImageIcon(f.getPath()));
 					try {
 						Image i = ImageIO.read(f);
+//						BufferedImage bi = (BufferedImage) i;
+//						BufferedImage bufimg = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_BGR);
+						
 						images.add(i);
 						imgWidth = i.getWidth(null);
 						imgHeight = i.getHeight(null);
@@ -198,7 +201,9 @@ public class DynamicDisplay extends JWindow {
 			}
 			@Override
 			public void mouseReleased(MouseEvent me) {
+				setVisible(false);
 				bgImage = getBackgroundImage();
+				setVisible(true);
 				loop = true;
 				runThread = new Thread(new DynamicControl());
 				runThread.start();
