@@ -18,6 +18,7 @@ import java.util.Properties;
 
 import javax.swing.JFrame;
 
+import dynamic.util.FileUtil;
 import dynamic.util.ImageUtil;
 
 public class BaseFrame extends JFrame{
@@ -25,15 +26,13 @@ public class BaseFrame extends JFrame{
 	private TrayIcon trayIcon;
 	//任务栏图标菜单
 	private PopupMenu popupMenu = new PopupMenu();
-//	private MenuItem openItem = new MenuItem("打开/关闭");
-//	private MenuItem newItem = new MenuItem("新建下载任务");
-//	private MenuItem startItem = new MenuItem("开始全部任务");
-//	private MenuItem pauseItem = new MenuItem("暂停全部任务");
-//	private MenuItem removeItem = new MenuItem("删除完成任务");
+	private MenuItem setItem = new MenuItem("显示设置窗口");
+	private MenuItem saveItem = new MenuItem("保存当前设置");
 	private MenuItem quitItem = new MenuItem("退出");
 	private DynamicDisplay dd = new DynamicDisplay();
+	
 	public BaseFrame(){
-		init();
+//		initConfig();
 		createTrayIcon();
 		initListeners();
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
@@ -43,21 +42,20 @@ public class BaseFrame extends JFrame{
 		setVisible(false);
 		dd.setVisible(true);
 	}
-	private void init() {
+	//not need now
+	private void initConfig() {
 		Properties pro = new Properties();
-		File f ;
-		String config = System.getProperty("java.class.path") + "/../res/config.properties";
 		try {
-			f = new File(config);
+			File f = new File(FileUtil.CONFIG);
 			f.createNewFile();
 			pro.load(new FileInputStream(f));
 //			pro.getProperty("locateX");
 //			System.out.println(pro.getProperty("locateX"));
+			
 			if(pro.getProperty("locateX") == null) {
 				pro.setProperty("locateX", String.valueOf(0));
 				pro.setProperty("locateY", String.valueOf(0));
 				try {
-					f = new File(config);
 					pro.store(new FileOutputStream(f), "");
 				} catch (FileNotFoundException e1) {
 					// TODO Auto-generated catch block
@@ -67,37 +65,59 @@ public class BaseFrame extends JFrame{
 					e1.printStackTrace();
 				}
 			}
+			if(pro.getProperty("dir") == null) {
+				
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	private BufferedImage trayIconImage = (BufferedImage) ImageUtil.getImage(System.getProperty("java.class.path") + "/../res/trayIcon.png");
+	
 	/**
 	 * 创建任务栏图标
 	 */
 	private void createTrayIcon() {
-//		this.popupMenu.add(openItem);
-//		this.popupMenu.add(newItem);
-//		this.popupMenu.add(startItem);
-//		this.popupMenu.add(pauseItem);
-//		this.popupMenu.add(removeItem);
-		this.popupMenu.add(quitItem);
+		popupMenu.add(setItem);
+		popupMenu.add(saveItem);
+		popupMenu.add(quitItem);
 		try {
 			SystemTray tray = SystemTray.getSystemTray();
-			this.trayIcon = new TrayIcon(trayIconImage, "退出动态图", this.popupMenu);
+			this.trayIcon = new TrayIcon(trayIconImage, "魔性的动态图", this.popupMenu);
 			this.trayIcon.setToolTip("退出动态图");
 			tray.add(this.trayIcon);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+	
 	private void initListeners() {
-		this.quitItem.addActionListener(new ActionListener() {
+		quitItem.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				System.exit(0);
+			}
+		});
+		saveItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				dd.saveConfig();
+			}
+		});
+		setItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(isVisible()) {
+					setVisible(false);
+				} else {
+					setVisible(true);
+				}
 			}
 		});
 	}

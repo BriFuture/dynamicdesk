@@ -22,29 +22,31 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JWindow;
 
+import dynamic.util.FileUtil;
+
 
 /**
  * Ðü¸¡´°¿Ú
- * @author yangenxiong yangenxiong2009@gmail.com
- * @version  1.0
- * <br/>ÍøÕ¾: <a href="http://www.crazyit.org">·è¿ñJavaÁªÃË</a>
- * <br>Copyright (C), 2009-2010, yangenxiong
- * <br>This program is protected by copyright laws.
  */
 public class DynamicDisplay extends JWindow {
+	private final static int  TIME_GAP = 5;
+	//the gif to display
 	private ImageIcon gif;
-	private List<String> demopngNames = new ArrayList<String>();
+	
+//	private List<String> demopngNames = new ArrayList<String>();
+	//the array of pngs
 	private List<ImageIcon> demopngs = new ArrayList<ImageIcon>();
 	private boolean loop = true;
 	private List<Image> images = new ArrayList<Image>();
 	//png mode current image
 	private Image currentImg ;
 	//png mode gap time
-	private int gapTime = 100;
+	private int gapTime;
 	private Image bgImage;
-	private String dirPath = System.getProperty("java.class.path") + "/../res/demos.png/";
-	private String imagePath = System.getProperty("java.class.path") + "/../res/demo.gif";
-	private String config = System.getProperty("java.class.path") + "/../res/config.properties";
+	//png file folder path
+	private String dirPath;
+	//img path
+	private String imagePath;
 	public static final int DEFAULT_IMG_WIDTH = 150;
 	public static final int DEFAULT_IMG_HEIGHT = 200;
 	//x on screen
@@ -57,45 +59,67 @@ public class DynamicDisplay extends JWindow {
 	private int relateY;
 	private int imgWidth = DEFAULT_IMG_WIDTH;
 	private int imgHeight = DEFAULT_IMG_HEIGHT;
-	private boolean pngsMode = false;
+	private boolean pngsMode;
 	private Thread runThread;
 	
 	public DynamicDisplay() {
-//		System.out.println("suspend window"+getLocateX());
 		pngsMode = true;
-		try {
-			File f = new File(config);
-			Properties pro = new Properties();
-			pro.load(new FileInputStream(f));
-			locateX = Integer.parseInt(pro.getProperty("locateX"));
-			locateY = Integer.parseInt(pro.getProperty("locateY"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			locateX = 0;
-			locateY = 0;
-		}
-//		pro.
 		//get the image to display
+		initFromConfig();
 		display();
-//		System.out.println(imgHeight);
 		bgImage = getBackgroundImage();
-		
 		setLocationRelativeTo(null);
 		setSize(imgWidth, imgHeight);
 		setLocation(getPosition());
-//		this.setAlwaysOnTop(true);
 		initListeners();
 		runThread = new Thread(new DynamicControl());
 		runThread.start();
 	}
-
-	/**
-	 * to do
-	 */
-	public void savePosition() {
-		//locateX; locateY;
+	private void initFromConfig() {
+		try {
+			File f = new File(FileUtil.CONFIG);
+			Properties pro = new Properties();
+			pro.load(new FileInputStream(f));
+			locateX = Integer.parseInt(pro.getProperty("locateX","0"));
+			locateY = Integer.parseInt(pro.getProperty("locateY","0"));
+			gapTime = Integer.parseInt(pro.getProperty("gapTime","100"));
+			imgWidth = Integer.parseInt(pro.getProperty("imgWidth",String.valueOf(DEFAULT_IMG_WIDTH)));
+			imgHeight = Integer.parseInt(pro.getProperty("imgHeight",String.valueOf(DEFAULT_IMG_HEIGHT)));
+			if(pngsMode) {
+				dirPath = pro.getProperty("png_dir_path", FileUtil.DEMO_DIR);
+			} else {
+				imagePath = pro.getProperty("image_path",FileUtil.DEMO_GIF_PATH);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
+	/**
+	 * ±£´æÅäÖÃÎÄ¼þ
+	 */
+	public void saveConfig() {
+		try {
+			File f = new File(FileUtil.CONFIG);
+			Properties pro = new Properties();
+			pro.load(new FileInputStream(f));
+			pro.setProperty("locateX", String.valueOf(locateX));
+			pro.setProperty("locateY", String.valueOf(locateY));
+			pro.setProperty("gapTime", String.valueOf(gapTime));
+			pro.setProperty("imgWidth", String.valueOf(imgWidth));
+			pro.setProperty("imgHeight", String.valueOf(imgHeight));
+			
+			if(pngsMode) {
+				pro.setProperty("png_dir_path", dirPath);
+			} else {
+				pro.setProperty("image_path", imagePath);
+			}
+			pro.store(new FileOutputStream(f), "");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private Point getPosition() {
 		Point pos = new Point();
 		pos.x = locateX;
@@ -121,13 +145,6 @@ public class DynamicDisplay extends JWindow {
 	}
 	private void display() {
 		if(pngsMode) {
-//			System.out.println("main:"+this.getClass().getResource("/dynamic/Main.class").getPath());
-//			System.out.println("baseFrame:"+this.getClass().getResource("/").getPath());
-//			URL fileUrl = this.getClass().getClassLoader().getResource("/res/demos.png/demo_p01.png");
-//			System.out.println("flag:"+fileUrl);
-//			String filepath = getClass().getClassLoader().getResource("/res/demos.png/").getPath();
-//			String filepath = System.getProperty("java.class.path") + "/../res/demos.png/";
-//			System.out.println(filepath);
 			//get pngs file dir
 			File dir = new File(dirPath);
 			if(dir.isDirectory()) {
@@ -139,11 +156,13 @@ public class DynamicDisplay extends JWindow {
 					try {
 						Image i = ImageIO.read(f);
 //						BufferedImage bi = (BufferedImage) i;
-//						BufferedImage bufimg = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_BGR);
-						
-						images.add(i);
+						//to change the size
+						BufferedImage bufimg = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_RGB);
+						bufimg.getGraphics().drawImage(i, 0, 0, null);
+//						images.add(bufimg);
 						imgWidth = i.getWidth(null);
 						imgHeight = i.getHeight(null);
+						images.add(i);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -162,10 +181,7 @@ public class DynamicDisplay extends JWindow {
 	@Override
 	public void paint(Graphics g) {
 		if(pngsMode) {
-//			super.paint(g);
 			g.drawImage(bgImage, 0, 0, null);
-//			g.clearRect(0, 0, imgWidth, imgHeight);
-//			g.setColor(getBackground());
 			//init currentImg
 			if(currentImg == null)
 				currentImg = images.get(0);
@@ -207,23 +223,16 @@ public class DynamicDisplay extends JWindow {
 				loop = true;
 				runThread = new Thread(new DynamicControl());
 				runThread.start();
-				try {
-					
-					File f = new File(config);
-					Properties pro = new Properties();
-					pro.load(new FileInputStream(f));
-					pro.setProperty("locateX", String.valueOf(locateX));
-					pro.setProperty("locateY", String.valueOf(locateY));
-					pro.store(new FileOutputStream(f), "");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}
+			//Ë«»÷±£´æÎ»ÖÃ
 			public void mouseClicked(MouseEvent me) {
-				
+				if(me.getClickCount() == 2) {
+					saveConfig();
+				}
 			}
 		});
 	}
+	
 	class DynamicControl implements Runnable {
 		@Override
 		public void run() {
@@ -272,21 +281,6 @@ public class DynamicDisplay extends JWindow {
 	 */
 	public void setImages(List<Image> images) {
 		this.images = images;
-	}
-
-
-	/**
-	 * @return the demopngNames
-	 */
-	public List<String> getDemopngNames() {
-		return demopngNames;
-	}
-
-	/**
-	 * @param demopngNames the demopngNames to set
-	 */
-	public void setDemopngNames(List<String> demopngNames) {
-		this.demopngNames = demopngNames;
 	}
 
 	/**
