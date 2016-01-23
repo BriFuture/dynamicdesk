@@ -13,7 +13,5 @@ public class Main{
 		// TODO Auto-generated method stub
 //		BaseFrame bf = new BaseFrame();
 		BaseFrame bf = new BaseFrame();
-//		dd.run();
-//		new Thread(dd).start();
 	}
 }
