@@ -262,6 +262,8 @@ public class DynamicDisplay extends JWindow {
 					currentImg = images.get(i);
 					i++;
 					Thread.sleep(gapTime);
+//					long mem = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) /1024/1024;
+//					System.out.println("used memory: " + mem + " M");
 				} catch (Exception e) {
 					// TODO: handle exception
 					e.printStackTrace();

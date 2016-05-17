@@ -57,6 +57,8 @@ public class BaseFrame extends JFrame{
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 		setVisible(false);
 		dd.setVisible(true);
+		
+		
 	}
 	private void init() {
 		JPanel panel = new JPanel();
